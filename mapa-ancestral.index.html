@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Ancestral | Tecnologia de Autoconhecimento</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['Cinzel', 'serif'],
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        ancestral: {
+                            gold: '#D4AF37',
+                            clay: '#8B4513',
+                            earth: '#2D241E',
+                            cream: '#F9F4F0',
+                            accent: '#B0413E'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-gold { background: linear-gradient(135deg, #D4AF37 0%, #C5A028 100%); }
+        .card-shadow { box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1); }
+        .chart-container { position: relative; width: 100%; max-width: 450px; margin: auto; height: 320px; }
+        .odu-circle { transition: all 0.3s ease; }
+        .odu-circle:hover { transform: scale(1.05); filter: brightness(1.1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade { animation: fadeIn 0.6s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-ancestral-cream text-ancestral-earth font-sans leading-relaxed">
+
+    <!-- Navigation -->
+    <nav class="p-6 border-b border-gray-200 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-ancestral-earth rotate-45 flex items-center justify-center">
+                <span class="text-ancestral-gold -rotate-45 font-bold">M</span>
+            </div>
+            <span class="font-serif font-bold tracking-tighter text-xl">MAPA ANCESTRAL</span>
+        </div>
+        <div class="flex gap-4">
+            <button onclick="resetApp()" class="text-xs font-semibold uppercase tracking-widest text-gray-400 hover:text-ancestral-earth transition">Reiniciar</button>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-4 md:p-10">
+        
+        <!-- STEP 1: INPUT -->
+        <section id="step-input" class="animate-fade">
+            <div class="text-center max-w-2xl mx-auto mb-12">
+                <h1 class="font-serif text-4xl mb-4">Sua Tecnologia Pessoal</h1>
+                <p class="text-gray-500">O Mapa Ancestral é um sistema de análise comportamental baseado na matemática dos Odùs. Insira seus dados para decodificar sua matriz.</p>
+            </div>
+
+            <div class="bg-white p-8 md:p-12 rounded-3xl card-shadow max-w-lg mx-auto">
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-widest mb-2 opacity-50">Nome Completo</label>
+                        <input type="text" id="input-name" class="w-full bg-gray-50 border-b-2 border-gray-200 p-3 focus:border-ancestral-gold outline-none transition" placeholder="Nome de nascimento">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-widest mb-2 opacity-50">Data de Nascimento</label>
+                        <input type="date" id="input-date" class="w-full bg-gray-50 border-b-2 border-gray-200 p-3 focus:border-ancestral-gold outline-none transition">
+                    </div>
+                    <button onclick="generateMap()" class="w-full gradient-gold text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-2xl transition-all transform hover:-translate-y-1">
+                        GERAR MAPA ESTRUTURADO
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- STEP 2: RESULTS (Hidden by default) -->
+        <section id="step-results" class="hidden space-y-12 animate-fade">
+            
+            <!-- Dashboard Header -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+                <div class="md:col-span-1 bg-ancestral-earth text-white p-8 rounded-3xl flex flex-col justify-between h-full">
+                    <div>
+                        <h2 class="font-serif text-2xl mb-1" id="res-name">Nome do Usuário</h2>
+                        <p class="text-ancestral-gold text-sm uppercase tracking-widest mb-8" id="res-date"></p>
+                        
+                        <div class="mb-8">
+                            <span class="text-xs opacity-50 uppercase block mb-1">Arquétipo Dominante</span>
+                            <h3 class="text-3xl font-serif" id="res-archetype">O Iniciador</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-white/10 pt-6">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <span class="text-xs opacity-50 block">Odù Principal</span>
+                                <span class="text-2xl font-bold text-ancestral-gold" id="res-main-odu">#01</span>
+                            </div>
+                            <button onclick="window.print()" class="p-3 bg-white/5 rounded-full hover:bg-white/10 transition">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H7a2 2 0 00-2 2v4h10z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="md:col-span-2 bg-white p-8 rounded-3xl card-shadow">
+                    <h4 class="font-serif text-xl mb-6 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-ancestral-gold rounded-full"></span>
+                        Indicadores de Potencial
+                    </h4>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4" id="map-grid">
+                <!-- Dynamically filled -->
+            </div>
+
+            <!-- Deep Analysis -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white p-8 rounded-3xl card-shadow">
+                    <h4 class="font-serif text-xl mb-4 text-ancestral-accent">Sombra e Desafios</h4>
+                    <p id="res-shadow" class="text-gray-600 mb-6"></p>
+                    <h4 class="font-serif text-xl mb-4 text-green-700">Prosperidade e Caminhos</h4>
+                    <p id="res-prosperity" class="text-gray-600"></p>
+                </div>
+                <div class="bg-ancestral-clay text-white p-8 rounded-3xl card-shadow">
+                    <h4 class="font-serif text-2xl mb-4">Plano de Ação Estratégico</h4>
+                    <ul class="space-y-4" id="res-action-plan">
+                        <!-- Dynamically filled -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Advanced Monetization Offer -->
+            <div class="bg-gradient-to-r from-ancestral-earth to-black p-10 rounded-3xl text-center text-white">
+                <h3 class="font-serif text-2xl mb-2 text-ancestral-gold">Desbloqueie sua Leitura Profunda</h3>
+                <p class="opacity-70 mb-6 max-w-xl mx-auto">Receba um relatório de 40 páginas com cruzamento detalhado de sinastria relacional e ciclos temporais para os próximos 12 meses.</p>
+                <button class="bg-ancestral-gold px-8 py-3 rounded-full font-bold text-ancestral-earth hover:scale-105 transition">Adquirir Relatório Premium</button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="p-10 text-center text-xs text-gray-400 font-bold uppercase tracking-widest">
+        &copy; 2024 MAPA ANCESTRAL - Tecnologia de Autoconhecimento Simbólico
+    </footer>
+
+    <script>
+        // DATABASE DOS ODÙS
+        const ODU_DATA = {
+            1: { name: "Okaran", archetype: "O Iniciador", function: "Liderança e Ação", emotion: "Reatividade", relation: "Independência", prosperity: "Inicia caminhos", shadow: "Impulsividade", stats: [90, 40, 30, 80] },
+            2: { name: "Ejioko", archetype: "O Colaborador", function: "Diplomacia e Parceria", emotion: "Sensibilidade", relation: "Simbiose", prosperity: "Ganho por aliança", shadow: "Dúvida", stats: [40, 80, 90, 60] },
+            3: { name: "Etaogunda", archetype: "O Guerreiro", function: "Execução e Corte", emotion: "Ferver", relation: "Confronto", prosperity: "Vitória sobre obstáculos", shadow: "Obsessão", stats: [85, 30, 40, 70] },
+            4: { name: "Irosun", archetype: "O Estruturador", function: "Visão e Calma", emotion: "Observação", relation: "Zelo", prosperity: "Consolidação de patrimônio", shadow: "Teimosia", stats: [50, 70, 75, 55] },
+            5: { name: "Oshê", archetype: "O Magnetizador", function: "Fascínio e Sedução", emotion: "Fluidez", relation: "Encantamento", prosperity: "Brilho e Ouro", shadow: "Vaidade", stats: [70, 90, 85, 40] },
+            6: { name: "Obará", archetype: "O Próspero", function: "Abundância e Palavra", emotion: "Expansão", relation: "Generosidade", prosperity: "Sucesso repentino", shadow: "Ostentação", stats: [80, 60, 70, 95] },
+            7: { name: "Odi", archetype: "O Guardião", function: "Resiliência e Mistério", emotion: "Introvertida", relation: "Reserva", prosperity: "Segurança a longo prazo", shadow: "Isolamento", stats: [45, 40, 50, 70] },
+            8: { name: "Ejionile", archetype: "O Comandante", function: "Justiça e Ordem", emotion: "Intensidade", relation: "Proteção", prosperity: "Cargos de autoridade", shadow: "Arrogância", stats: [95, 50, 60, 85] },
+            9: { name: "Ossá", archetype: "O Transmutador", function: "Mudança e Vento", emotion: "Instabilidade", relation: "Liberdade", prosperity: "Inovação radical", shadow: "Fuga", stats: [75, 45, 55, 40] },
+            10: { name: "Ofun", archetype: "O Sábio", function: "Maturidade e Calma", emotion: "Paciência", relation: "Mentoria", prosperity: "Sabedoria que gera valor", shadow: "Lentidão", stats: [30, 60, 80, 75] },
+            11: { name: "Owanrin", archetype: "O Inquieto", function: "Curiosidade e Busca", emotion: "Pressa", relation: "Novidade", prosperity: "Negócios dinâmicos", shadow: "Inconstância", stats: [65, 55, 45, 60] },
+            12: { name: "Ejilaxebora", archetype: "O Estrategista", function: "Lógica e Combate", emotion: "Frieza", relation: "Estratégia", prosperity: "Vencer pelo intelecto", shadow: "Rigidez", stats: [80, 40, 35, 90] },
+            13: { name: "Ejiologbon", archetype: "O Curador", function: "Profundidade e Morte", emotion: "Melancolia", relation: "Empatia", prosperity: "Serviço ao coletivo", shadow: "Acomodação", stats: [20, 85, 95, 50] },
+            14: { name: "Iká", archetype: "O Prudente", function: "Preservação", emotion: "Cuidado", relation: "Defesa", prosperity: "Acumulação de recursos", shadow: "Desconfiança", stats: [40, 50, 70, 80] },
+            15: { name: "Obeogunda", archetype: "O Visionário", function: "Planejamento", emotion: "Foco", relation: "Direção", prosperity: "Grandes empreitadas", shadow: "Cálculo frio", stats: [70, 40, 60, 85] },
+            16: { name: "Alafia", archetype: "O Harmonioso", function: "Paz e Totalidade", emotion: "Equilíbrio", relation: "União", prosperity: "Plenitude e Paz", shadow: "Passividade", stats: [40, 95, 95, 60] }
+        };
+
+        let myChart;
+
+        function reduce(n) {
+            if (n === 0) return 16;
+            while (n > 16) {
+                let s = n.toString().split('').reduce((a, b) => parseInt(a) + parseInt(b), 0);
+                n = s;
+            }
+            return n;
+        }
+
+        function calculateNameValue(name) {
+            const table = { a:1, b:2, c:3, d:4, e:5, f:6, g:7, h:8, i:9, j:1, k:2, l:3, m:4, n:5, o:6, p:7, q:8, r:9, s:1, t:2, u:3, v:4, w:5, x:6, y:7, z:8 };
+            let sum = [...name.toLowerCase().replace(/\s/g, '')].reduce((acc, char) => acc + (table[char] || 0), 0);
+            return reduce(sum);
+        }
+
+        function generateMap() {
+            const name = document.getElementById('input-name').value;
+            const date = document.getElementById('input-date').value;
+
+            if (!name || !date) {
+                alert("Por favor, preencha todos os campos.");
+                return;
+            }
+
+            const d = new Date(date);
+            const dStr = date.replace(/-/g, '');
+            
+            // Lógica do Algoritmo
+            // Ori: soma dos dígitos da data
+            const ori = reduce([...dStr].reduce((a, b) => parseInt(a) + parseInt(b), 0));
+            // Ancestralidade: primeiros dígitos (dia)
+            const anc = reduce(parseInt(dStr.substring(6, 8)));
+            // Futuro: segundos dígitos (mês + ano)
+            const fut = reduce(parseInt(dStr.substring(4, 6)) + parseInt(dStr.substring(0, 4)));
+            // Caminho: anc + fut
+            const cam = reduce(anc + fut);
+            // Placenta: nome + ori
+            const pla = reduce(calculateNameValue(name) + ori);
+
+            const map = [
+                { label: 'Ori (Essência)', val: ori, pos: 'Núcleo' },
+                { label: 'Ancestralidade', val: anc, pos: 'Base' },
+                { label: 'Futuro', val: fut, pos: 'Direção' },
+                { label: 'Caminho', val: cam, pos: 'Ação' },
+                { label: 'Placenta', val: pla, pos: 'Social' }
+            ];
+
+            displayResults(name, date, map);
+        }
+
+        function displayResults(name, date, map) {
+            document.getElementById('step-input').classList.add('hidden');
+            document.getElementById('step-results').classList.remove('hidden');
+
+            const mainOdu = ODU_DATA[map[0].val];
+            document.getElementById('res-name').innerText = name;
+            document.getElementById('res-date').innerText = new Date(date).toLocaleDateString('pt-BR');
+            document.getElementById('res-archetype').innerText = mainOdu.archetype;
+            document.getElementById('res-main-odu').innerText = `#${map[0].val.toString().padStart(2, '0')}`;
+            
+            document.getElementById('res-shadow').innerText = mainOdu.shadow + ": " + getShadowInterpretation(mainOdu);
+            document.getElementById('res-prosperity').innerText = mainOdu.prosperity + ". Identificamos que sua energia de " + mainOdu.name + " favorece ambientes de " + mainOdu.function.toLowerCase();
+
+            // Grid
+            const grid = document.getElementById('map-grid');
+            grid.innerHTML = '';
+            map.forEach(item => {
+                const data = ODU_DATA[item.val];
+                grid.innerHTML += `
+                    <div class="bg-white p-6 rounded-2xl card-shadow border-t-4 border-ancestral-gold odu-circle">
+                        <span class="text-[10px] uppercase font-bold text-gray-400 block mb-2">${item.label}</span>
+                        <div class="text-2xl font-serif mb-1">${data.name}</div>
+                        <div class="text-xs text-ancestral-clay font-bold mb-3 uppercase tracking-tighter">${data.archetype}</div>
+                        <p class="text-[11px] leading-tight text-gray-500">${data.function}</p>
+                    </div>
+                `;
+            });
+
+            // Action Plan
+            const plan = document.getElementById('res-action-plan');
+            plan.innerHTML = `
+                <li class="flex gap-3 text-sm"><span class="text-ancestral-gold font-bold">01.</span> Aplique sua função de ${mainOdu.function.toLowerCase()} para resolver conflitos imediatos.</li>
+                <li class="flex gap-3 text-sm"><span class="text-ancestral-gold font-bold">02.</span> Mitigue a ${mainOdu.shadow.toLowerCase()} através de exercícios de foco e planejamento.</li>
+                <li class="flex gap-3 text-sm"><span class="text-ancestral-gold font-bold">03.</span> No campo profissional, priorize o ${mainOdu.prosperity.toLowerCase()}.</li>
+            `;
+
+            updateChart(mainOdu.stats);
+        }
+
+        function getShadowInterpretation(odu) {
+            return `A influência de ${odu.name} sugere um padrão de ${odu.shadow.toLowerCase()} que pode bloquear seu crescimento se não houver consciência do comportamento reativo.`;
+        }
+
+        function updateChart(stats) {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            if (myChart) myChart.destroy();
+            
+            myChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Emocional', 'Relacional', 'Prosperidade', 'Liderança'],
+                    datasets: [{
+                        label: 'Frequência do Odù',
+                        data: stats,
+                        backgroundColor: 'rgba(212, 175, 55, 0.2)',
+                        borderColor: '#D4AF37',
+                        pointBackgroundColor: '#2D241E',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { display: false }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function resetApp() {
+            document.getElementById('step-results').classList.add('hidden');
+            document.getElementById('step-input').classList.remove('hidden');
+            document.getElementById('input-name').value = '';
+            document.getElementById('input-date').value = '';
+        }
+    </script>
+</body>
+</html>
